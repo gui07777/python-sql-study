@@ -1,4 +1,4 @@
-Este projeto teve como objetivo aprender a utilizar o python integrado com o sql.
+Este projeto teve como objetivo aprender a utilizar o Python integrado com o Sql utilizando o fórum do Free Code Camp.
 
 Ferramentas utilizadas:
 

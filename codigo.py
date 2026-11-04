@@ -1,6 +1,10 @@
 import mysql.connector
 from mysql.connector import Error
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def create_db_connection(host_name, user_name, user_password, db_name):
     connection =  None
@@ -17,7 +21,10 @@ def create_db_connection(host_name, user_name, user_password, db_name):
 
     return connection
 
-connection = create_db_connection("localhost", "root", pw, db)
+db_pass = os.getenv("CONNECTION_DB_PASS")
+db_name = os.getenv("DB_NAME")
+
+connection = create_db_connection("localhost", "root", db_pass, db_name)
 
 def create_database(connection, query):
     cursor = connection.cursor()
@@ -226,5 +233,13 @@ results = read_query(connection, q5)
 for result in results:
     print(result)
 
+# Formatando o resultado
+
+# Formatando em uma lista de listas
 
 from_db = []
+
+for result in results:
+    result = list(result)
+    from_db.append(result)
+print(from_db)

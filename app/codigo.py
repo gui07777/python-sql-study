@@ -1,11 +1,15 @@
 import mysql.connector
 from mysql.connector import Error
-import pandas as pd
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Cria a conexão com o banco de dados usando o host, nome do usuario e senha do usuario
+# O nome do banco nao é necessário na primeira conexão se não houver um banco para ser conectado
+# para este método consideramos que ja exista um banco de dados criado, e então passamos o nome dele
+# que esta localizado na .env, caso contrario, remover parâmetros e argumentos "db_name" para evitar erros.
+# Retorna a instância da conexão, a qual poderemos utilizar para acessar métodos como o cursor que executa operações no banco
 def create_db_connection(host_name, user_name, user_password, db_name):
     connection =  None
     try:
@@ -21,11 +25,13 @@ def create_db_connection(host_name, user_name, user_password, db_name):
 
     return connection
 
-db_pass = os.getenv("CONNECTION_DB_PASS")
-db_name = os.getenv("DB_NAME")
+db_user = os.getenv("DB_USER")
+db_pass = os.getenv("DB_PASSWORD")
 
-connection = create_db_connection("localhost", "root", db_pass, db_name)
+connection = create_db_connection("localhost", db_user, db_pass, "school")
 
+# Cria o banco de dados
+# Usa a instancia da conexão para acessar o método cursor() responsável por executar os comandos no banco com o método execute()
 def create_database(connection, query):
     cursor = connection.cursor()
     try:
@@ -38,7 +44,7 @@ create_database_query = "CREATE DATABASE school"
 # create_database(connection, create_database_query)
 
 
-# função que executa as querys no banco usando o commit para salvar as alterações
+# Método que executa as querys no banco usando o commit para salvar as alterações
 def execute_query(connection, query):
     cursor = connection.cursor()
     try:
@@ -48,7 +54,7 @@ def execute_query(connection, query):
     except Error as err:
         print(f"Error: '{err}'")
 
-# função para deletar tabelas
+# Método para deletar tabelas
 def delete_table(table_name):
     query = f"DROP TABLE {table_name}"
     try:
@@ -57,7 +63,7 @@ def delete_table(table_name):
     except Error as err:
         print(f"Delete table error '{err}'")
 
-# função para ler consultas no banco
+# Método para ler consultas no banco
 def read_query(connection, query):
     cursor = connection.cursor()
     result = None
@@ -65,6 +71,21 @@ def read_query(connection, query):
         cursor.execute(query)
         result = cursor.fetchall()
         return result
+    except Error as err:
+        print(f"Error: '{err}'")
+
+# Usamos o método execute_query() que é suficiente para inserir
+# um registro por vez em uma tabela, mas imagine que seja necesário
+# armazenar mais de um professor de uma só vez. O método execute_query()
+# usa o cursor.execute() que foi feito para processar apenas um registro por vez.
+# Para inserir vários professores, por exemplo, é necessário usar o método,
+# executemany() passando além da sintaxe inserção uma lista com mais de um professor.
+def execute_list_query(connection, sql, val):
+    cursor = connection.cursor()
+    try:
+        cursor.executemany(sql, val)
+        connection.commit()
+        print("Query successful.")
     except Error as err:
         print(f"Error: '{err}'")
 
@@ -228,18 +249,52 @@ ON course.client = client.client_id
 WHERE course.in_school = FALSE
 """
 
-results = read_query(connection, q5)
-
-for result in results:
-    print(result)
-
 # Formatando o resultado
 
 # Formatando em uma lista de listas
 
-from_db = []
+# from_db = []
+
+# for result in results:
+#     result = list(result)
+#     from_db.append(result)
+# print(from_db)
+
+
+update = """
+UPDATE client SET address = '23 Fingiertweg, 14534 Berlin'
+WHERE client_name = 'Big Business Federation';
+"""
+
+q6 = """
+SELECT * FROM client WHERE client_name = 'Big Business Federation';
+"""
+
+# result = read_query(connection, q6)
+
+# print(result)
+
+delete_russian_course = """
+DELETE FROM course WHERE course_id = 20
+"""
+
+# execute_query(connection, delete_russian_course)
+
+
+# Cada "%s" é uma coluna que receberá o respectivo valor
+sql = '''
+    INSERT INTO teacher (teacher_id, fisrt_name, last_name, language_1, language_2, dob, tax_id, phone_no)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+val = [
+    (7, 'Hank', 'Dodson', 'ENG', None, '1991-12-23', 11111, '+491772345678'),
+    (8, 'Sue', 'Perkins', 'MAN', 'ENG', '1976-02-02', 22222, '+491443456432')
+]
+
+# execute_list_query(connection, sql, val)
+
+results = read_query(connection, q1)
 
 for result in results:
-    result = list(result)
-    from_db.append(result)
-print(from_db)
+    print(result)
